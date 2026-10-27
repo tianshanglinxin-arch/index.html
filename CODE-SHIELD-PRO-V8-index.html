@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>CODE SHIELD PRO V8 — Server-Side Access Control</title>
+<link rel="stylesheet" href="/style.css">
+
+<script defer src="/vendor/acorn.js"></script>
+<script defer src="/app.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="logo">CS</div><div><h1 class="title">CODE SHIELD PRO <span class="tag">V8 SECURE</span></h1><p class="subtitle">サーバー側アクセス制御・JavaScript難読化・構文検証・監査 — iPhone対応</p></div></header>
+<div class="statusbar" aria-live="polite"><span class="pill"><span id="engineDot" class="dot"></span><span id="engineStatus">保護エンジンを読み込み中…</span></span><span class="pill">SOURCE MAP：常時OFF</span><span class="pill">処理：自分のサーバー側</span><span class="pill">実行：しない</span></div>
+<section class="panel access-panel"><div class="two"><div class="formrow"><label for="accessToken">サーバーアクセスキー</label><input id="accessToken" class="access-token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="サーバー設定済みのAPP_ACCESS_TOKENを入力"><div class="actions token-actions"><button class="btn" id="generateAccessKeyBtn" type="button">強力なキーを自動生成</button><button class="btn secondary" id="toggleAccessKeyBtn" type="button">表示／非表示</button><button class="btn secondary" id="copyAccessKeyBtn" type="button">キーをコピー</button></div><p class="help">生成ボタンはキーを作るだけです。同じ値をホスティング側の秘密変数 APP_ACCESS_TOKEN に設定して、サーバーを再起動／再デプロイしてください。キーはこのブラウザーに保存されません。</p></div><div class="formrow"><label>送信・保存について</label><p id="authHelp" class="help">入力したコードは、自分が管理する同一サーバーへ送信されます。サーバーはソース本文をファイル保存・ログ出力しません。</p><p class="help"><strong>重要：</strong>このキーはツールAPIと結果ページを保護します。配布したJavaScript自体の解析を完全に防ぐものではありません。</p></div></div></section>
+<div class="grid">
+<div class="stack">
+<section class="panel" id="sourcePanel"><div class="editor-head"><h2><span class="num">01</span> 元のJavaScript</h2><div class="actions"><button class="btn" id="loadBtn" type="button">ファイルを読み込む</button><button class="btn" id="sampleBtn" type="button">サンプル</button><button class="btn" id="clearBtn" type="button">クリア</button><input id="fileInput" type="file" accept=".js,.mjs,.cjs,.txt,text/javascript" class="hidden"></div></div>
+<textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="自分のJavaScriptコードをここに貼り付けてね…"></textarea><label class="check auto-clear-check"><input id="autoClearSource" type="checkbox" checked>難読化成功後、元コードの入力欄を自動消去（比較エリアのコピーは保持）</label><div class="editor-meta"><span id="sourceStats">0文字 · 0行</span><span>最大2 MB推奨</span></div>
+<div class="result-head"><div class="actions"><button class="btn secondary" id="syntaxBtn" type="button">構文チェック</button><button class="btn secondary" id="auditInputBtn" type="button">元コードを監査</button></div><span id="sourceSyntax" class="muted small">未検査</span></div>
+<div class="notice">注意：このツールは入力コードを実行しません。既知のパターンを探す静的監査なので、見逃しや誤検出があり得ます。</div></section>
+<section class="panel"><h2><span class="num">02</span> 保護設定</h2>
+<div class="formrow"><label for="profile">保護プリセット</label><select id="profile"><option value="balanced">Balanced — 互換性重視</option><option value="strong">Strong — 強い保護</option><option value="maximum" selected>Maximum — 難読化を最大化</option></select><p class="help">Maximumはコードサイズや実行速度、互換性に影響することがあります。必ず自分のアプリで動作確認してね。</p></div>
+<div class="two"><div class="formrow"><label for="encoding">文字列配列の符号化</label><select id="encoding"><option value="rc4" selected>RC4（強め・重め）</option><option value="base64">Base64（軽め）</option><option value="none">なし</option></select></div><div class="formrow"><label for="domainList">ドメイン制限（任意）</label><input id="domainList" type="text" placeholder="example.com, www.example.com" autocomplete="off"><label class="check"><input id="domainLock" type="checkbox">指定したドメインでのみ動かす</label></div></div>
+<div class="checks">
+<label class="check"><input id="stringArray" type="checkbox" checked>文字列配列化</label><label class="check"><input id="shuffle" type="checkbox" checked>文字列配列シャッフル</label><label class="check"><input id="rotate" type="checkbox" checked>文字列配列ローテーション</label><label class="check"><input id="splitStrings" type="checkbox" checked>文字列を分割</label><label class="check"><input id="numbers" type="checkbox" checked>数値を式へ変換</label><label class="check"><input id="controlFlow" type="checkbox" checked>制御フロー平坦化</label><label class="check"><input id="deadCode" type="checkbox" checked>デッドコード注入</label><label class="check"><input id="unicode" type="checkbox" checked>Unicodeエスケープ</label><label class="check"><input id="selfDefending" type="checkbox" checked>改変耐性（self-defending）</label><label class="check"><input id="debugProtection" type="checkbox" checked>デバッグ妨害</label><label class="check"><input id="disableConsole" type="checkbox" checked>console出力を無効化</label><label class="check"><input id="objectKeys" type="checkbox">オブジェクトキー変換（互換性注意）</label>
+</div>
+<div class="sliderrow"><label for="cffThreshold" class="label">制御フロー強度</label><output id="cffValue">0.75</output><input id="cffThreshold" type="range" min="0.10" max="1" step="0.05" value="0.75"></div>
+<div class="sliderrow"><label for="deadThreshold" class="label">デッドコード注入率</label><output id="deadValue">0.10</output><input id="deadThreshold" type="range" min="0.05" max="0.35" step="0.05" value="0.10"></div>
+<div class="actions action-gap"><button class="btn primary" id="obfuscateBtn" type="button">難読化を実行</button><button class="btn secondary" id="validateOptionsBtn" type="button">設定を検証</button></div>
+<div id="buildNotice" class="notice">ソースマップは無効。グローバル変数・オブジェクトのプロパティ名は互換性を優先して一律変更しません。</div></section>
+</div>
+<div class="stack right">
+<section class="panel"><div class="editor-head"><h2><span class="num">03</span> 保護後コード</h2><div class="actions"><button class="btn" id="copyOutputBtn" type="button">コピー</button><button class="btn" id="downloadBtn" type="button">.js保存</button></div></div>
+<textarea id="output" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="難読化したコードがここに表示されるよ…" readonly></textarea><div class="editor-meta"><span id="outputStats">未生成</span><span id="outputHash">SHA-256：未計算</span></div><div class="stats"><div class="stat"><strong id="beforeSize">—</strong><span>元コード bytes</span></div><div class="stat"><strong id="afterSize">—</strong><span>出力 bytes</span></div><div class="stat"><strong id="growth">—</strong><span>サイズ変化</span></div></div>
+<div class="result-head"><span id="outputSyntax" class="muted small">出力の構文：未検査</span><button class="btn secondary" id="auditOutputBtn" type="button">出力を監査</button></div>
+<div class="actions"><button class="btn secondary" id="compareBtn" type="button">比較エリアへ</button><button class="btn secondary" id="reportBtn" type="button">監査レポート保存</button></div>
+<div id="resultLinks" class="share-box" hidden aria-live="polite">
+  <h3>難読化結果のリンクを作成しました</h3>
+  <p class="help">このリンクは作成から30分で期限切れになります。リンクを知っている人は、難読化後のコードを表示・保存できます。秘密情報を含むコードの共有には使わないでください。</p>
+  <label for="shareUrl" class="label">難読化済みコードを開くリンク（読み込みにはサーバーアクセスキーが必要）</label>
+  <div class="share-row"><input id="shareUrl" type="url" readonly aria-label="難読化結果リンク"><button class="btn secondary" id="copyShareUrlBtn" type="button">リンクをコピー</button></div>
+  <div class="actions"><a class="btn primary link-button" id="openResultLink" href="#" target="_blank" rel="noopener noreferrer">難読化結果を開く ↗</a><a class="btn link-button" href="#sourcePanel">難読化の場所へ戻る ↑</a></div>
+  <p id="resultExpires" class="help">リンクはサーバーのメモリ内に一時保存されます。</p>
+</div></section>
+<section class="panel"><h2><span class="num">04</span> セキュリティ監査</h2><div id="auditSummary" class="empty">「元コードを監査」または「難読化を実行」を押すと、確認できた問題候補が表示されるよ。</div><div class="gap-10"></div><div id="findings" class="findings"><div class="empty">監査結果はまだないよ。</div></div><div class="divider"></div><div class="actions"><button class="btn secondary" id="copyReportBtn" type="button">レポートをコピー</button><button class="btn" id="downloadReportBtn" type="button">レポート .txt保存</button></div></section>
+</div>
+</div>
+<section class="panel compare-panel" id="comparePanel"><div class="editor-head"><h2><span class="num">05</span> 元コードと保護後の比較</h2><button class="btn" id="backTopBtn" type="button">上に戻る</button></div><div class="compare"><div><div class="label compare-label">元コード</div><textarea id="compareSource" readonly placeholder="元コードが入るよ"></textarea></div><div><div class="label compare-label">保護後コード</div><textarea id="compareOutput" readonly placeholder="出力コードが入るよ"></textarea></div></div></section>
+<section class="panel checklist-panel"><h2><span class="num">✓</span> 公開前の防御チェック</h2><div class="checks"><label class="check"><input type="checkbox">APIキー・秘密鍵・パスワードをブラウザコードから除去</label><label class="check"><input type="checkbox">認証・権限判定をサーバー側で再検証</label><label class="check"><input type="checkbox">本番環境で認証・レート制限・ログを確認</label><label class="check"><input type="checkbox">難読化後の機能を実際の端末・ブラウザでテスト</label><label class="check"><input type="checkbox">ソースマップ・デバッグファイルを公開物から除去</label><label class="check"><input type="checkbox">依存ライブラリを確認し、固定バージョンを使用</label></div><div class="notice danger">重要：難読化やドメイン制限は、解析・改ざんを完全に防止する仕組みではありません。クライアントに配布したコードは最終的に解析される可能性があります。秘密情報はサーバー側に置き、認可をサーバーで実施してください。</div></section>
+<p class="foot">このクライアントは、入力したコードを同じオリジンの自分のサーバーへ送信して難読化します。サーバー側は本文をファイル保存せず、本文やアクセスキーをログ出力しません。公開環境ではHTTPSとAPP_ACCESS_TOKENを必須にしてください。運営者は送信先サーバーを信頼できる場合に限り、機密コードを入力してください。監査は完全なセキュリティ診断ではありません。</p>
+</div>
+
+</body>
+</html>
